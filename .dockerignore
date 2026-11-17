@@ -1,0 +1,12 @@
+# The fp32 graphs exist only for benchmarking; shipping them would quadruple
+# the image for no production benefit.
+models/onnx-fp32/
+tests/
+docs/
+bench/
+.superpowers/
+.git/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+RESULTS.md

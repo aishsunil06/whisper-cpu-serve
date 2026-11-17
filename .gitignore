@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Exported models are large build artifacts, regenerable via scripts/export_onnx.py
+models/
+*.onnx
+
+# Benchmark run output; RESULTS.md is committed, raw JSON is not
+bench/results/
+
+# Superpowers scratch workspace
+.superpowers/

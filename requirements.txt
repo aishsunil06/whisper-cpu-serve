@@ -1,0 +1,18 @@
+# Serving dependencies only -- this is what the container installs.
+# Pinned to the versions this project was actually built and benchmarked
+# against, so the deployed image matches the numbers in RESULTS.md.
+# transformers is held below 5.x because optimum's ORT export targets 4.x.
+#
+# For the benchmark and the test suite, install requirements-dev.txt as well.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+numpy==2.4.2
+soundfile==0.14.0
+soxr==1.1.0
+transformers==4.57.6
+optimum[onnxruntime]==2.1.0
+onnxruntime==1.32.0
+torch==2.13.0
+fastapi==0.136.1
+uvicorn==0.47.0
+python-multipart==0.0.32
