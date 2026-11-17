@@ -5,17 +5,16 @@
 
 ## Purpose
 
-Produce defensible evidence of three things currently missing from the author's
-portfolio: **speech/audio ML**, **model deployment**, and **model optimization**.
+Answer a question most model demos skip: **what does it cost to run a speech
+model on CPU, and what does making it cheaper cost in accuracy?**
 
-The gap is specific. Model *training* is already evidenced twice elsewhere (an
-8-layer CNN at Samsung, a fine-tuned DistilBERT on a demand-signal benchmark).
-What is absent is taking a model, serving it, making it faster, and proving the
-improvement with numbers. This project targets only that gap and deliberately
-does not train anything.
+Training a model and serving one are different skills, and the second gets far
+less attention. This project deliberately trains nothing. It takes a pretrained
+model, serves it, makes it faster, and proves the improvement with numbers that
+survive scrutiny.
 
-Secondary purpose: interview material. A measured latency/accuracy trade-off is
-a conversation; "I trained a classifier" is a sentence.
+A measured latency/accuracy trade-off is a conversation. "I trained a
+classifier" is a sentence.
 
 ## Success Criteria
 
@@ -35,8 +34,7 @@ legitimate result and must be reported as such rather than tuned away.
 - **CPU-only.** The development machine has no CUDA (`torch 2.13.0+cpu`). This is
   not a limitation to apologize for: CPU inference cost is a real production
   concern, which makes the optimization work more relevant, not less.
-- **Days, not weeks.** The author is applying to a role now. Scope is cut
-  accordingly.
+- **Days, not weeks.** A deliberately tight timebox; scope is cut accordingly.
 - **Free-tier hosting only.** No paid infrastructure.
 - **Python 3.11 in the container**, despite 3.13 locally, for `onnxruntime` and
   `optimum` wheel availability.
@@ -123,10 +121,10 @@ and thread setting. Numbers without that context are not quotable.
 ### Hosted latency is not benchmark latency
 
 Free-tier Space CPU is slow and shared. The hosted demo's latency will not match
-the benchmark table, and the two claims must stay separate: resume and interview
-numbers come from the controlled local benchmark with hardware stated; the Space
-exists to prove the service is deployed and reachable. Conflating them is the
-inconsistency an interviewer would catch.
+the benchmark table, and the two claims must stay separate: quoted numbers come
+from the controlled local benchmark with hardware stated; the Space exists to
+prove the service is deployed and reachable. Conflating them is an
+inconsistency a careful reader would catch.
 
 ## Testing
 
@@ -174,15 +172,8 @@ These are what turn days into weeks:
 - GPU inference
 - Multi-language evaluation
 
-## Resume Framing (post-completion)
+## Reporting (post-completion)
 
-Bullets to be written from **actual measured results**, not predicted ones. The
-project is designed to support the JD terms *speech/audio*, *model deployment*,
-*model optimization*, *model evaluation*, *data processing*, and *debugging* —
-but each must be backed by something that really happened.
-
-## Follow-on (not this project)
-
-Reinforcement learning remains unevidenced and was deliberately deferred to its
-own standalone project rather than forced into this one. Google's requirement is
-"one or more" ML specializations, which speech/audio satisfies on its own.
+Any claim made about this project must come from **actual measured results**,
+not predicted ones. Every number in the README and RESULTS.md is produced by
+`scripts/run_bench.py` on the hardware named there.

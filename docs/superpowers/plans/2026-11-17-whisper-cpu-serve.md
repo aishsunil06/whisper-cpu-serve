@@ -24,7 +24,7 @@
 ### Deviations from the spec, decided during planning
 
 1. **Model is `whisper-base`, not `whisper-small`.** Three engines over a benchmark set on CPU with `small` makes each full run tens of minutes, which kills iteration inside a days-scale timebox. `base` preserves every part of the story. The model id is a constant in one place so it can be raised later.
-2. **Dataset is `hf-internal-testing/librispeech_asr_dummy` (73 utterances from LibriSpeech validation-clean), not a 200-utterance test-clean slice.** Full test-clean is a ~346MB shard; the dummy set is ~9MB and is the standard fixture for exactly this comparison. The eval set size must be stated honestly in the README and in any resume bullet.
+2. **Dataset is `hf-internal-testing/librispeech_asr_dummy` (73 utterances from LibriSpeech validation-clean), not a 200-utterance test-clean slice.** Full test-clean is a ~346MB shard; the dummy set is ~9MB and is the standard fixture for exactly this comparison. The eval set size must be stated honestly in the README and anywhere the numbers are quoted.
 
 ## Review Focus
 
