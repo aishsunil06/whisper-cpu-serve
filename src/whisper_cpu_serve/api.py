@@ -16,6 +16,8 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from . import config
 from .audio import AudioDecodeError, EmptyAudioError, duration_seconds, load_audio
 from .engines.base import Transcriber
+from .threads import observed_thread_count
+from .transcribe import transcribe_audio
 
 VERSION = "0.1.0"
 
@@ -35,14 +37,17 @@ def create_app(engine: Transcriber) -> FastAPI:
             "status": "ok",
             "model": config.MODEL_ID,
             "engine": engine.name,
-            "thread_count": config.THREAD_COUNT,
+            "thread_count": observed_thread_count(),
             "max_audio_seconds": config.MAX_AUDIO_SECONDS,
             "version": VERSION,
         }
 
+    # Declared `def`, not `async def`, deliberately: inference is a synchronous
+    # CPU call of ~1s, and on the event loop it would serialize every request
+    # including /health. FastAPI runs a sync handler in a threadpool.
     @app.post("/transcribe")
-    async def transcribe(file: UploadFile = File(...)) -> dict:
-        raw = await file.read()
+    def transcribe(file: UploadFile = File(...)) -> dict:
+        raw = _read_capped(file)
 
         try:
             audio = load_audio(raw)
@@ -65,7 +70,7 @@ def create_app(engine: Transcriber) -> FastAPI:
             )
 
         start = time.perf_counter()
-        result = engine.transcribe(audio)
+        result = transcribe_audio(engine, audio)
         latency_ms = (time.perf_counter() - start) * 1000.0
 
         return {
@@ -73,9 +78,36 @@ def create_app(engine: Transcriber) -> FastAPI:
             "audio_seconds": round(seconds, 3),
             "latency_ms": round(latency_ms, 1),
             "engine": result.engine,
+            # Surfaced so a caller can tell windowing happened rather than
+            # having to infer it from a suspiciously short transcript.
+            "n_chunks": result.n_chunks,
         }
 
     return app
+
+
+def _read_capped(file: UploadFile) -> bytes:
+    """Read an upload, refusing bodies too large to be valid audio.
+
+    Reads in blocks and aborts past the cap rather than buffering the whole
+    body first: a multi-gigabyte POST would otherwise be read and decoded
+    before the duration check could reject it.
+    """
+    limit = config.MAX_UPLOAD_BYTES
+    buffer = bytearray()
+
+    while True:
+        block = file.file.read(1024 * 1024)
+        if not block:
+            break
+        buffer.extend(block)
+        if len(buffer) > limit:
+            raise HTTPException(
+                status_code=413,
+                detail=f"upload exceeds {limit // (1024 * 1024)}MB limit",
+            )
+
+    return bytes(buffer)
 
 
 def build_configured_engine() -> Transcriber:

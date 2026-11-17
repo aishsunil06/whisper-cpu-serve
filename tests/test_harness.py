@@ -76,3 +76,20 @@ def test_host_info_records_thread_count_and_cpu():
     assert info["thread_count"] >= 1
     assert "cpu" in info
     assert info["logical_cores"] >= 1
+
+
+def test_rtf_uses_audio_duration_not_sample_count():
+    """Mixed durations: RTF and mean latency must diverge.
+
+    With every sample the same length, sum(latency)/total_audio and
+    sum(latency)/n are numerically identical, so a wrong implementation passes.
+    One 1s clip plus one 3s clip separates them: 4s of audio at 0.05s per call
+    is 0.1/4 = 0.025, whereas a per-sample mean would be 0.05.
+    """
+    engine = FakeTranscriber(latency_s=0.05)
+    samples = [
+        Sample(audio=np.zeros(16000, dtype=np.float32), reference="a"),
+        Sample(audio=np.zeros(48000, dtype=np.float32), reference="a"),
+    ]
+    metrics = benchmark(engine, samples, warmup=0)
+    assert metrics.rtf == pytest.approx(0.025, abs=0.012)

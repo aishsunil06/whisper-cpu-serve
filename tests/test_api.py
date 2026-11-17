@@ -92,3 +92,34 @@ def test_error_responses_carry_a_readable_message(client):
         "/transcribe", files={"file": ("fake.wav", b"nonsense" * 50, "audio/wav")}
     ).json()
     assert "detail" in body
+
+
+def test_long_audio_is_windowed_not_truncated(client):
+    """A 90s upload must transcribe all of it, and say how many windows it took.
+
+    Before this was wired in, the response reported audio_seconds 90.0 while
+    transcribing only the first 30 seconds -- correct-looking and wrong.
+    """
+    response = client.post(
+        "/transcribe", files={"file": ("long.wav", _wav(90.0), "audio/wav")}
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["n_chunks"] == 3
+    assert body["text"] == "hello there hello there hello there"
+
+
+def test_short_audio_reports_a_single_chunk(client):
+    body = client.post(
+        "/transcribe", files={"file": ("clip.wav", _wav(2.0), "audio/wav")}
+    ).json()
+    assert body["n_chunks"] == 1
+
+
+def test_oversized_upload_is_rejected_before_decoding(client):
+    """A huge body must not be fully buffered and decoded before rejection."""
+    payload = b"\x00" * (60 * 1024 * 1024)
+    response = client.post(
+        "/transcribe", files={"file": ("huge.wav", payload, "audio/wav")}
+    )
+    assert response.status_code == 413

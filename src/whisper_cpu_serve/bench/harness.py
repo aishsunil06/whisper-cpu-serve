@@ -25,6 +25,7 @@ import numpy as np
 
 from .. import config
 from ..engines.base import Transcriber
+from ..threads import observed_thread_count
 from ..wer import corpus_wer
 
 
@@ -55,7 +56,8 @@ def host_info() -> dict:
         "cpu": platform.processor() or platform.machine(),
         "platform": platform.platform(),
         "logical_cores": os.cpu_count() or 1,
-        "thread_count": config.THREAD_COUNT,
+        "thread_count": observed_thread_count(),
+        "thread_count_requested": config.THREAD_COUNT,
     }
 
 

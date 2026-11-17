@@ -108,10 +108,15 @@ optimized one; that is the whole point.
 ### Run the API locally
 
 ```bash
-pip install -r requirements.txt
+# On Python 3.13 add --only-binary=:all: -- pip otherwise tries to source-build
+# an older numpy pin and fails.
+pip install -r requirements-dev.txt
 python scripts/export_onnx.py          # exports fp32 + INT8 graphs to models/
 ENGINE=onnx_int8 PYTHONPATH=src uvicorn whisper_cpu_serve.api:app --port 7860
 ```
+
+`requirements.txt` is serving-only (what the container installs);
+`requirements-dev.txt` adds the benchmark and test dependencies.
 
 ```bash
 curl localhost:7860/health
@@ -125,9 +130,16 @@ curl -F file=@clip.wav localhost:7860/transcribe
   "text": "transcribed speech",
   "audio_seconds": 2.0,
   "latency_ms": 412.3,
-  "engine": "onnx_int8"
+  "engine": "onnx_int8",
+  "n_chunks": 1
 }
 ```
+
+Audio longer than 30 seconds is split into non-overlapping 30-second windows,
+because Whisper's feature extractor silently truncates anything longer.
+`n_chunks` reports how many windows were used, so a caller can tell windowing
+happened instead of inferring it from a short transcript. A word landing exactly
+on a window boundary may be split.
 
 `GET /health` reports the model, engine, and thread count actually running, so
 a deployment can be verified rather than assumed.
@@ -153,7 +165,11 @@ pytest -m slow   # also runs real models against a real clip
 
 ### Build the container
 
+The exported INT8 graphs are not committed (they are build artifacts), so
+generate them before building:
+
 ```bash
+python scripts/export_onnx.py          # required: Dockerfile copies models/onnx-int8/
 docker build -t whisper-cpu-serve .
 docker run -p 7860:7860 whisper-cpu-serve
 ```

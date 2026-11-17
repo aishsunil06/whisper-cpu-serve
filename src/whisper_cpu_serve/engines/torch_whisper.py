@@ -13,6 +13,7 @@ from transformers import WhisperForConditionalGeneration, WhisperProcessor
 
 from .. import config
 from ..audio import TARGET_SAMPLE_RATE
+from ..threads import configure_threads
 from .base import Transcript
 
 
@@ -23,7 +24,7 @@ class TorchWhisper:
         self.name = "torch_fp32"
         self.model_id = model_id
 
-        torch.set_num_threads(config.THREAD_COUNT)
+        configure_threads()
         self._processor = WhisperProcessor.from_pretrained(model_id)
         self._model = WhisperForConditionalGeneration.from_pretrained(model_id)
         self._model.eval()

@@ -1,0 +1,14 @@
+# Benchmark and test dependencies, on top of requirements.txt.
+#
+# jiwer computes the WER column in RESULTS.md and datasets loads the evaluation
+# set, so `python scripts/run_bench.py` needs both. They are kept out of
+# requirements.txt so the served image does not carry them.
+#
+# On Python 3.13, install with --only-binary=:all: -- otherwise pip tries to
+# source-build an older numpy pin and fails at metadata generation.
+-r requirements.txt
+
+jiwer==4.0.0
+datasets==5.0.1
+pytest==9.0.2
+httpx==0.28.1

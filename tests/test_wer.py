@@ -55,3 +55,24 @@ def test_corpus_wer_of_perfect_transcription_is_zero():
 def test_corpus_wer_rejects_mismatched_lengths():
     with pytest.raises(ValueError):
         corpus_wer(["a", "b"], ["a"])
+
+
+def test_corpus_wer_counts_insertions_against_an_empty_reference():
+    """A hallucinating engine must not be rewarded with silence.
+
+    Dropping empty-reference pairs entirely removes the inserted words from the
+    numerator as well as the denominator, scoring three spurious words as a
+    perfect transcription.
+    """
+    assert corpus_wer(["", "a b"], ["spurious words here", "a b"]) > 0.0
+
+
+def test_corpus_wer_insertion_count_is_exact():
+    # 3 insertions over 2 reference words.
+    assert corpus_wer(["", "a b"], ["x y z", "a b"]) == pytest.approx(1.5)
+
+
+def test_corpus_wer_raises_when_every_reference_is_empty():
+    """A WER over a zero-word denominator is not a number."""
+    with pytest.raises(ValueError):
+        corpus_wer(["", ""], ["x y z", "q"])

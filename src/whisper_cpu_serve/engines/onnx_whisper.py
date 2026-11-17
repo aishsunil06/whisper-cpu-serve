@@ -13,11 +13,13 @@ from pathlib import Path
 
 import numpy as np
 import onnxruntime
+import torch
 from optimum.onnxruntime import ORTModelForSpeechSeq2Seq
 from transformers import WhisperProcessor
 
 from .. import config
 from ..audio import TARGET_SAMPLE_RATE
+from ..threads import configure_threads
 from .base import Transcript
 
 
@@ -27,6 +29,10 @@ class OnnxWhisper:
     def __init__(self, model_dir: Path, quantized: bool = False) -> None:
         self.name = "onnx_int8" if quantized else "onnx_fp32"
         self.model_dir = Path(model_dir)
+
+        # ONNX session threads cover the session only; feature extraction and
+        # optimum's generation loop run in torch, so both must be pinned.
+        configure_threads()
 
         session_options = onnxruntime.SessionOptions()
         session_options.intra_op_num_threads = config.THREAD_COUNT
@@ -43,7 +49,10 @@ class OnnxWhisper:
             audio, sampling_rate=TARGET_SAMPLE_RATE, return_tensors="pt"
         ).input_features
 
-        token_ids = self._model.generate(features, language="en", task="transcribe")
+        with torch.inference_mode():
+            token_ids = self._model.generate(
+                features, language="en", task="transcribe"
+            )
         text = self._processor.batch_decode(token_ids, skip_special_tokens=True)[0]
         return Transcript(text=text.strip(), engine=self.name)
 

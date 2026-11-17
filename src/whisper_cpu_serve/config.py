@@ -21,6 +21,10 @@ THREAD_COUNT = int(os.environ.get("OMP_NUM_THREADS", "4"))
 
 MAX_AUDIO_SECONDS = 120.0
 
+# 120s of 16-bit 16kHz mono WAV is ~3.8MB; 50MB leaves generous room for other
+# formats while refusing bodies that could only be an accident or an attack.
+MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MODELS_DIR = REPO_ROOT / "models"
 ONNX_FP32_DIR = MODELS_DIR / "onnx-fp32"
