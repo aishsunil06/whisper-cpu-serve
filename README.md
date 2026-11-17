@@ -1,13 +1,3 @@
----
-title: Whisper CPU Serve
-emoji: 🎙️
-colorFrom: indigo
-colorTo: gray
-sdk: docker
-app_port: 7860
-pinned: false
----
-
 # whisper-cpu-serve
 
 Speech-to-text served on CPU, with the inference cost actually measured.
@@ -93,9 +83,14 @@ optimized one; that is the whole point.
 
 ## Honest limitations
 
-- **Hosted latency is not benchmark latency.** The free-tier Space runs on
-  shared, throttled CPU. Numbers in the table above come from the controlled
-  local benchmark on the hardware named there. Do not compare the two.
+- **Not currently hosted.** The service is containerized and verified running
+  locally, but there is no public instance. Every free container host that fits
+  this image's ~833MB runtime footprint requires a verified payment method, and
+  a portfolio demo did not justify one. `scripts/deploy_space.py` deploys to a
+  Hugging Face Space if you want one (note that Docker Spaces now require a PRO
+  subscription), and the image runs unmodified on Cloud Run or Fly.io.
+  Were it hosted, shared throttled CPU would make its latency incomparable to
+  the benchmark table above, which is measured locally on the hardware named.
 - **The evaluation set is small** — LibriSpeech validation-clean via
   `hf-internal-testing/librispeech_asr_dummy`, read-aloud audiobook speech. It is
   clean, American-accented, and not representative of noisy or accented audio.
