@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whisper-cpu-serve"
+version = "0.1.0"
+description = "CPU inference serving and optimization benchmark for Whisper speech-to-text"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "slow: loads a real model; excluded from the fast suite",
+]
+addopts = "-m 'not slow'"
