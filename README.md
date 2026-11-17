@@ -42,11 +42,19 @@ Whether that is a good trade is a product question, not a benchmark question: it
 is clearly worth it for a draft transcript a human will edit, and clearly not
 worth it for anything where the transcript is the final artifact.
 
-**ONNX fp32 is the worst of both worlds here and it is worth saying so.** It is
-faster than Torch at the median but has a *far worse* tail — p95 of 4180 ms
-against Torch's 2714 ms, despite a better p50. A median-only comparison would
-have called it a straight 1.69x win and been actively misleading. This is the
-clearest argument in the project for reporting percentiles rather than means.
+**ONNX fp32 shows a worse tail than Torch despite a better median** — p95 of
+4180 ms against Torch's 2714 ms, on a better p50. If that holds, it means a
+median-only comparison would have called ONNX fp32 a straight 1.69x win and been
+misleading, which is the argument for reporting percentiles rather than means.
+
+**This specific observation is not yet verified.** The table comes from a single
+run with engines benchmarked in one contiguous block each, in the order
+`torch_fp32 → onnx_fp32 → onnx_int8`, on a thermally-managed laptop. Block
+ordering is a plausible confound for tail latency specifically, and nothing in
+the harness separates a model property from a scheduling artifact in the second
+block. Treat the p50, WER and size columns as solid and this p95 observation as
+provisional until a repeated or interleaved run confirms it. The p50 speedup and
+the WER cost are not ordering-sensitive in the same way.
 
 **ONNX fp32 is also 2.4x larger than the Torch model it was exported from**
 (699 MB vs 290 MB). The export emits `decoder_model.onnx` and
