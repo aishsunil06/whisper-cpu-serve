@@ -61,6 +61,11 @@ optimized one; that is the whole point.
   model, not producing one.
 - **Dynamic quantization only.** Static quantization needs a calibration set and
   was out of scope.
+- **The container is 2.16GB, and quantization barely dents that.** Shipping INT8
+  instead of fp32 graphs saves ~520MB of weights, but `torch`, `transformers` and
+  `onnxruntime` dominate the image regardless. Model-size reduction is a real
+  win for memory and load time, not for image size; slimming the image further
+  would mean dropping `torch`, which `optimum` requires.
 
 ## Usage
 
