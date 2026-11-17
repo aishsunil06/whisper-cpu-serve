@@ -21,7 +21,43 @@ deployed container that ships only the fastest one.
 
 ## Results
 
-<!--RESULTS-->
+`openai/whisper-base`, 73 utterances of LibriSpeech validation-clean, 2 warmup
+runs discarded per engine, 4 inference threads on an Intel Core (16 logical
+cores), Windows 11.
+
+| Engine | WER | p50 latency | p95 latency | RTF | Model size | Speedup | Size reduction |
+|---|---|---|---|---|---|---|---|
+| `torch_fp32` | 9.5% | 1491 ms | 2714 ms | 0.26 | 290 MB | 1.00x | 1.00x |
+| `onnx_fp32` | 9.5% | 883 ms | 4180 ms | 0.22 | 699 MB | 1.69x | 0.42x |
+| `onnx_int8` | 12.0% | 764 ms | 1520 ms | 0.14 | 178 MB | 1.95x | 1.63x |
+
+Regenerate with `python scripts/run_bench.py`; raw output lands in
+`bench/results/latest.json`.
+
+### What the numbers say
+
+**INT8 quantization bought 1.95x on median latency and 1.63x on model size, and
+cost 2.5 points of WER.** 9.5% to 12.0% is a 26% relative increase in errors.
+Whether that is a good trade is a product question, not a benchmark question: it
+is clearly worth it for a draft transcript a human will edit, and clearly not
+worth it for anything where the transcript is the final artifact.
+
+**ONNX fp32 is the worst of both worlds here and it is worth saying so.** It is
+faster than Torch at the median but has a *far worse* tail — p95 of 4180 ms
+against Torch's 2714 ms, despite a better p50. A median-only comparison would
+have called it a straight 1.69x win and been actively misleading. This is the
+clearest argument in the project for reporting percentiles rather than means.
+
+**ONNX fp32 is also 2.4x larger than the Torch model it was exported from**
+(699 MB vs 290 MB). The export emits `decoder_model.onnx` and
+`decoder_with_past_model.onnx` as separate graphs, each carrying a full copy of
+the decoder weights. Quantization is what pulls the served artifact back under
+the original (178 MB) — so on this pipeline, INT8 is not merely an optimization,
+it is what makes the ONNX path worth deploying at all.
+
+**Every engine ran faster than real time** (RTF below 1.0), so even the baseline
+could serve this workload. The optimization buys headroom and concurrency, not
+feasibility.
 
 ## Why this is set up the way it is
 
